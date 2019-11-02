@@ -2,10 +2,12 @@ from django.shortcuts import render,redirect
 from django.http import HttpResponse, HttpRequest
 from credentials import client_id,client_secret,headers
 from django.views.generic import TemplateView
+#import pyrebase
 import spotipy
 import sys
 import spotipy.util as util
 import requests
+import json
 
 # Create your views here.
 class LoginView(TemplateView):
@@ -24,7 +26,19 @@ class AuthorizeView(TemplateView):
             'code':code,
             'redirect_uri':'http://localhost:8000/authorize'
         }
-        headers = headers
+        headers =  {'Authorization':'Basic ZTFlMTg0YTVkMjFiNGIzZTkxYTY5YzVlNzljZDk1YmM6ZGIyNjY3NGI3NGQxNGRmNDhlNjMxODdlZjU2ZGIzOWQ='}
         auth_request = requests.post('https://accounts.spotify.com/api/token',data=auth_body,headers=headers)
-        print(auth_request.content)
+        #get data from this request's content and post that to firebase db
+        json_response = auth_request.content.decode('utf8').replace("'", '"')
+        print(json_response)
+        print('- ' * 20)
+
+        # Load the JSON to a Python list & dump it back out as formatted JSON
+        data = json.loads(json_response)
+        s = json.dumps(data)
+        print(data['access_token'])
+        #print(auth_request)
+        #print(type(auth_request.content))
+        #sp = spotipy.Spotify(auth = auth_request.content['access_token'])
+        #print(sp.current_user)
         return render(request,'authorize.html',context={})
