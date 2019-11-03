@@ -1,6 +1,7 @@
 import requests
 import spotipy
 import sys
+import json
 import spotipy.util as util
 from credentials import client_id,client_secret,apiKey
 
@@ -38,11 +39,13 @@ def addTracks(artist,playlistID):
 #     print ("Can't get token for", username)
 
 #test_firebase
-endpoint = 'https://identitytoolkit.googleapis.com/v1/accounts:signUp?key='+apiKey
+#endpoint = 'https://identitytoolkit.googleapis.com/v1/accounts:signUp?key='+apiKey
+endpoint = 'https://spotifysocialnetwork.firebaseio.com/users.json?access_token=<ACCESS_TOKEN>'
 data = {
-    "email":"ahmedmoiz540@gmail.com",
-    "password":"DoubleX6",
-    "returnSecureToken":True
+    "username":"MoizAhmed1",
+    "userId":"8789422214",
+    "spotify_access":"ab984ls",
+    "spotify_refresh":"dl3902md",
 }
-r = requests.post(endpoint,data=data)
-print(r.content)
+r = requests.post(endpoint,data=json.dumps(data))
+print(r.status_code)
