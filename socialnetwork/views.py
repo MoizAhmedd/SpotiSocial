@@ -10,6 +10,20 @@ import requests
 import json
 
 # Create your views here.
+class SignInFireBaseView(TemplateView):
+    def get(self,request,*args,**kwargs):
+        email = request.GET.get('email')
+        password = request.GET.get('psw')
+        sign_in_endpoint = 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key='+apiKey
+        sign_in_req = {
+            "email":email,
+            "password":password,
+            "returnSecureToken":True
+        }
+        r = requests.post(sign_in_endpoint,data=sign_in_req)
+        if r.status_code == 200:
+            print(r.content)
+        return render(request,"signin.html",context={})
 class RegisterView(TemplateView):
     #Create user with email and password, when form is submitted, create user on firebase, and redirect to login view
     def get(self,request,*args,**kwargs):
