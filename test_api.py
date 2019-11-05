@@ -10,7 +10,7 @@ from credentials import client_id,client_secret,apiKey
 # username = 'moiz'
 # token = util.prompt_for_user_token(username, scope,client_id=client_id,client_secret=client_secret,redirect_uri='https://spotify.com')
 
-# #'https://www.spotify.com/ca-en/?code=AQCN1lDXCM-D0do3DdAMbIdSdsbcS9vZDWfR_i3xrM49I83YjiRxecYHQRAW3dOU3qh7f53n4X5tmOej4qRLhoambxkxCQORlYWnrxYqVgtYKNZlPq6Rd031nzJg6GbTTOfb-LCbABx-9q_Qj6Pp1TfFqKak63F_a5D0eh7C2n9LeWLq5Tt9lVG5t0-_aMuDDvIT6w7NA2E3gG1QM-g'
+
 # username2 = 'ahmed'
 # token2 = util.prompt_for_user_token(username2, scope,client_id=client_id,client_secret=client_secret,redirect_uri='https://spotify.com')
 # user2 = spotipy.Spotify(auth=token2)
@@ -40,7 +40,29 @@ def addTracks(artist,playlistID):
 
 #test_firebase
 #endpoint = 'https://identitytoolkit.googleapis.com/v1/accounts:signUp?key='+apiKey
-endpoint = 'https://spotifysocialnetwork.firebaseio.com/users.json?access_token=<ACCESS_TOKEN>'
+# from google.oauth2 import service_account
+# import google
+# from google.auth.transport.requests import AuthorizedSession
+
+# # Define the required scopes
+# scopes = [
+#   "https://www.googleapis.com/auth/userinfo.email",
+#   "https://www.googleapis.com/auth/firebase.database"
+# ]
+
+# # Authenticate a credential with the service account
+
+# # Use the credentials object to authenticate a Requests session.
+# authed_session = AuthorizedSession(credentials)
+
+# # Or, use the token directly, as described in the "Authenticate with an
+# # access token" section below. (not recommended)
+# request = google.auth.transport.requests.Request()
+# credentials.refresh(request)
+# access_token = credentials.token
+# print(access_token)
+
+endpoint = 'https://spotifysocialnetwork.firebaseio.com/users.json?access_token='
 data = {
     "username":"MoizAhmed1",
     "userId":"8789422214",

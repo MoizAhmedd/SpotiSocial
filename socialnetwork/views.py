@@ -1,6 +1,6 @@
 from django.shortcuts import render,redirect
 from django.http import HttpResponse, HttpRequest
-from credentials import client_id,client_secret,headers,apiKey
+from credentials import client_id,client_secret,headers,apiKey,gcp_access_token
 from django.views.generic import TemplateView
 #import pyrebase
 import spotipy
@@ -65,7 +65,18 @@ class AuthorizeView(TemplateView):
         data = json.loads(json_response)
         access_token = data['access_token']
         refresh_token = data['refresh_token']
-        spotify_id = data['id']
+        #spotify_id = data['id']
+        profile_req = {
+            "username":username,
+            "userId":userId,
+            "spotify_access":access_token,
+            "spotify_refresh":refresh_token,
+            "followers":[]
+        }
         #Create User Profile on Firebase
+        firebase_endpoint = 'https://spotifysocialnetwork.firebaseio.com/users.json?access_token='+gcp_access_token
+        create_profile = requests.post(firebase_endpoint,data=json.dumps(profile_req))
+
+
 
         return render(request,'authorize.html',context={})
