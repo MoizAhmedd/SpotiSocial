@@ -115,16 +115,22 @@ class DashboardView(TemplateView):
             stringified = r.content.decode('utf8').replace("'", '"')
             thisUser = json.loads(stringified)
         if thisUser:
-            sp = spotipy.Spotify(auth=thisUser['spotify_access'])
-            print(sp.current_user())
-            # try:
-            #     sp = spotipy.Spotify(auth=thisUser['spotify_access'])
-            #     print('1')
-            # except:
-            #     try:
-            #         sp = spotipy.Spotify(auth=thisUser['spotify_refresh'])
-            #         print('2')
-            #     except:
-            #         print('Both expired')
+            try:
+                sp = spotipy.Spotify(auth=thisUser['spotify_access'])
+                print(sp.current_user())
+                print('1 worked')
+            except:
+                #Access token expired, refresh and get new
+                token_endpoint = 'https://accounts.spotify.com/api/token'
+                token_req_body = {
+                    "grant_type": "refresh_token",
+                    "refresh_token":thisUser['spotify_refresh']
+                }
+                token_req = requests.post(token_endpoint,data=token_req_body,headers=headers)
+                token_response = json.loads(token_req.content.decode('utf8').replace("'", '"'))
+                new_access_token = token_response["access_token"]
+                sp = spotipy.Spotify(auth=new_access_token)
+                print(sp.current_user())
+                print('2 worked')
         #print(r.content)
         return render(request,'dashboard.html',context={})
