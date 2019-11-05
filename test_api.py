@@ -3,7 +3,7 @@ import spotipy
 import sys
 import json
 import spotipy.util as util
-from credentials import client_id,client_secret,apiKey
+from credentials import client_id,client_secret,apiKey,gcp_access_token
 
 
 # scope = 'user-library-read,playlist-modify-public,user-modify-playback-state,user-library-modify,user-read-recently-played,user-follow-modify,user-read-currently-playing,user-follow-read,user-top-read'
@@ -40,34 +40,29 @@ def addTracks(artist,playlistID):
 
 #test_firebase
 #endpoint = 'https://identitytoolkit.googleapis.com/v1/accounts:signUp?key='+apiKey
-# from google.oauth2 import service_account
-# import google
-# from google.auth.transport.requests import AuthorizedSession
+from google.oauth2 import service_account
+import google
+from google.auth.transport.requests import AuthorizedSession
 
-# # Define the required scopes
-# scopes = [
-#   "https://www.googleapis.com/auth/userinfo.email",
-#   "https://www.googleapis.com/auth/firebase.database"
-# ]
+# Define the required scopes
+scopes = [
+  "https://www.googleapis.com/auth/userinfo.email",
+  "https://www.googleapis.com/auth/firebase.database"
+]
 
-# # Authenticate a credential with the service account
+# Authenticate a credential with the service account
+credentials = service_account.Credentials.from_service_account_file(
+    "spotifysocialnetwork-firebase-adminsdk-g88eg-a951c302ea.json", scopes=scopes)
+# Use the credentials object to authenticate a Requests session.
+authed_session = AuthorizedSession(credentials)
 
-# # Use the credentials object to authenticate a Requests session.
-# authed_session = AuthorizedSession(credentials)
-
-# # Or, use the token directly, as described in the "Authenticate with an
-# # access token" section below. (not recommended)
-# request = google.auth.transport.requests.Request()
-# credentials.refresh(request)
-# access_token = credentials.token
-# print(access_token)
-
-endpoint = 'https://spotifysocialnetwork.firebaseio.com/users.json?access_token='
-data = {
-    "username":"MoizAhmed1",
-    "userId":"8789422214",
-    "spotify_access":"ab984ls",
-    "spotify_refresh":"dl3902md",
-}
-r = requests.post(endpoint,data=json.dumps(data))
-print(r.status_code)
+# Or, use the token directly, as described in the "Authenticate with an
+# access token" section below. (not recommended)
+request = google.auth.transport.requests.Request()
+credentials.refresh(request)
+access_token = credentials.token
+#print(access_token)
+endpoint = 'https://spotifysocialnetwork.firebaseio.com/users.json?access_token='+access_token
+#specific_endpoint = 'https://spotifysocialnetwork.firebaseio.com/users/-Lsw2t_72aE_7Ndd64Vc.json?access_token='+access_token
+r = requests.get(endpoint)
+print(r.content)

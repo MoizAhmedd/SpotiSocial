@@ -22,7 +22,22 @@ class SignInFireBaseView(TemplateView):
         }
         r = requests.post(sign_in_endpoint,data=sign_in_req)
         if r.status_code == 200:
-            print(r.content)
+            stringified = r.content.decode('utf8').replace("'", '"')
+            idToken = json.loads(stringified)["idToken"]
+            get_user_data_endpoint = 'https://identitytoolkit.googleapis.com/v1/accounts:lookup?key='+apiKey
+            get_user_data_req = {
+                "idToken":idToken
+            }
+            req = requests.post(get_user_data_endpoint,data=get_user_data_req)
+            data = json.loads(req.content.decode('utf8').replace("'", '"'))
+            userId = data['users'][0]['localId']
+            all_users_endpoint = 'https://spotifysocialnetwork.firebaseio.com/users.json?access_token='+gcp_access_token
+            all_users_req = requests.get(all_users_endpoint)
+            all_users = json.loads(all_users_req.content.decode('utf8').replace("'",'"'))
+            for user in all_users:
+                values = all_users[user]
+                if values["userId"] == userId:
+                    return redirect('dashboard',_id=user)
         return render(request,"signin.html",context={})
 class RegisterView(TemplateView):
     #Create user with email and password, when form is submitted, create user on firebase, and redirect to login view
@@ -90,7 +105,26 @@ class AuthorizeView(TemplateView):
         #Create User Profile on Firebase
         firebase_endpoint = 'https://spotifysocialnetwork.firebaseio.com/users.json?access_token='+gcp_access_token
         create_profile = requests.post(firebase_endpoint,data=json.dumps(profile_req))
-
-
-
         return render(request,'authorize.html',context={})
+
+class DashboardView(TemplateView):
+    def get(self,request,_id,*args,**kwargs):
+        spotify_access_endpoint = 'https://spotifysocialnetwork.firebaseio.com/users/'+_id+'.json?access_token='+gcp_access_token
+        r = requests.get(spotify_access_endpoint)
+        if r.status_code == 200:
+            stringified = r.content.decode('utf8').replace("'", '"')
+            thisUser = json.loads(stringified)
+        if thisUser:
+            sp = spotipy.Spotify(auth=thisUser['spotify_access'])
+            print(sp.current_user())
+            # try:
+            #     sp = spotipy.Spotify(auth=thisUser['spotify_access'])
+            #     print('1')
+            # except:
+            #     try:
+            #         sp = spotipy.Spotify(auth=thisUser['spotify_refresh'])
+            #         print('2')
+            #     except:
+            #         print('Both expired')
+        #print(r.content)
+        return render(request,'dashboard.html',context={})
