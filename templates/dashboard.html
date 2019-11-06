@@ -1,1 +1,53 @@
-<h1>Welcome to MIAMI</h1>
+<h1>Welcome to MIAMI {{user}}</h1>
+
+<h4>Your Devices</h4>
+<h5>{{devices}}</h5>
+
+{{track}}
+
+<h2>Playlists:</h2>
+<h3>Create a playlist</h3>
+{% for playlist in playlists%}
+    {% for key,values in playlist.items %}
+        {% if key == 'name' %}
+            <h4>{{values}}</h4>
+        {% endif %}
+        {% if key == 'images'%}
+            {% for image in values %}
+                {% for key1,imgVal in image.items %}
+                    {% if key1 == 'url' %}
+                        <img src = "{{imgVal}}">
+                    {% endif %}
+                {% endfor %}
+            {% endfor %}
+        {% endif %}
+    {% endfor %}
+    <h4>{{playlist}}</h4>
+    <br>
+    <!-- {% for key in playlist %}
+    {% if key == 'collaborative'%}
+        <h3>{{key}}</h3>
+        <br>
+    {% endif %}
+    {% endfor %} -->
+{% endfor %}
+
+<h2>Recently Played</h2>
+{% for recent in recently_played%}
+        {% for key,value in recent.items%}
+            {% if key == 'name' %}
+                Name:{{value}}
+            {% endif %}
+            {% if key == 'artist'%}
+                By:{{value}}
+            {% endif %}
+            {% if key == 'image'%}
+                <img src = "{{value}}">
+            {% endif %}
+        <br>
+        {% endfor %}
+{% endfor %}
+<h2>Followers:</h2>
+    <h3>You have no followers</h3>
+<h2>Following</h2>
+    <h3>You are following 0 people, click to follow users</h3>

@@ -64,7 +64,14 @@ class RegisterView(TemplateView):
 class LoginView(TemplateView):
     def get(self,request,_id,username,*args,**kwargs):
         #print(_id,username)
-        scope = 'user-library-read,playlist-modify-public,user-modify-playback-state,user-library-modify,user-read-recently-played,user-follow-modify,user-read-currently-playing,user-follow-read,user-top-read'
+        playlist_scopes = 'playlist-read-private,playlist-modify-public,playlist-read-collaborative,'
+        spotify_connect_scopes = 'user-modify-playback-state,user-read-currently-playing,user-read-playback-state,'
+        users_scopes = 'user-read-private,user-read-email,'
+        library_scopes = 'user-library-modify,user-read-email,'
+        listening_history_scopes = 'user-read-recently-played,user-top-read,'
+        playback_scopes = 'streaming'
+
+        scope = playlist_scopes+spotify_connect_scopes+users_scopes+library_scopes+listening_history_scopes+playback_scopes
         #username = request.GET.get('uname')
         state = 'username|' + username + '|id|' + _id
         url = 'https://accounts.spotify.com/authorize?response_type=code&client_id='+client_id+'&scope='+scope+'&redirect_uri=http://localhost:8000/authorize&state='+state
@@ -117,20 +124,73 @@ class DashboardView(TemplateView):
         if thisUser:
             try:
                 sp = spotipy.Spotify(auth=thisUser['spotify_access'])
-                print(sp.current_user())
-                print('1 worked')
+                if sp:
+                    playlists = sp.current_user_playlists()
+                    devices = sp.devices()
+                    recently_played = sp.current_user_recently_played()['items']
+                    #print(recently_played[0]['track'].items())
+                    recent_tracks = []
+                    for track in recently_played:
+                        this_track = track['track']
+                        #print('THIS TRACK\n',this_track)
+                        name = this_track['name']
+                        artist = this_track['artists'][0]['name']
+                        link = this_track['external_urls']['spotify']
+                        image = this_track['album']['images'][0]['url']
+                        data = {
+                            "name":name,
+                            "artist":artist,
+                            "link":link,
+                            "image":image
+                        }
+                        recent_tracks.append(data)
+                    # print('Playlists\n',playlists,devices)
+                    for playlist in playlists['items']:
+                        playlist['images'] = [playlist['images'][0]]
             except:
                 #Access token expired, refresh and get new
+                #print('TESTING 2')
                 token_endpoint = 'https://accounts.spotify.com/api/token'
                 token_req_body = {
                     "grant_type": "refresh_token",
                     "refresh_token":thisUser['spotify_refresh']
                 }
+                #print('MAKING REQUEST\n')
                 token_req = requests.post(token_endpoint,data=token_req_body,headers=headers)
+                #print('RESPONE\n',token_req.content)
                 token_response = json.loads(token_req.content.decode('utf8').replace("'", '"'))
                 new_access_token = token_response["access_token"]
+                #print('NEW ACCESS\n',new_access_token)
                 sp = spotipy.Spotify(auth=new_access_token)
-                print(sp.current_user())
-                print('2 worked')
+                #print('TESTING NEW\n',sp)
+                playlists = sp.current_user_playlists()
+                #print('CALLING METHODS WITH NEW\n',playlists,'\n')
+                devices = sp.devices()
+                recently_played = sp.current_user_recently_played()
+                #print(recently_played[0]['track'].items())
+                #print(devices,'\n')
+                #print(recently_played,'\n')
+                recent_tracks = []
+                for track in recently_played:
+                    this_track = track['track']
+                    #print('THIS TRACK\n',this_track)
+                    name = this_track['name']
+                    artist = this_track['artists'][0]['name']
+                    link = this_track['external_urls']['spotify']
+                    image = this_track['album']['images'][0]['url']
+                    data = {
+                        "name":name,
+                        "artist":artist,
+                        "link":link,
+                        "image":image
+                    }
+                    recent_tracks.append(data)
+                for playlist in playlists['items']:
+                    playlist['images'] = [playlist['images'][0]]
+                #recent = sp.current_user_recently_played()
+
         #print(r.content)
-        return render(request,'dashboard.html',context={})
+        try:
+            return render(request,'dashboard.html',context={"user":thisUser['username'],"playlists":playlists['items'],"devices":devices,"recently_played":recent_tracks})
+        except:
+            return HttpResponse('Something went wrong')
