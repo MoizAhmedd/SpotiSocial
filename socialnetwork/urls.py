@@ -7,5 +7,6 @@ urlpatterns = [
     path('authorize',views.AuthorizeView.as_view(),name='authorize'),
     path('signin',views.SignInFireBaseView.as_view(),name='signin'),
     path('dashboard/<str:_id>',views.DashboardView.as_view(),name='dashboard'),
-    path('feed/<str:_id>',views.FeedView.as_view(),name='feed')
+    path('feed/<str:_id>',views.FeedView.as_view(),name='feed'),
+    path('users/<str:_id>',views.UsersView.as_view(),name='users')
 ]

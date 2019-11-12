@@ -208,5 +208,9 @@ class FeedView(TemplateView):
         except:
             following = []
         if not following:
-            return render(request,'feed.html',context={"user":thisUser['username'],"noFollows":True})
-        return render(request,'feed.html',context={"user":thisUser['username'],"noFollows":False,"following":following})
+            return render(request,'feed.html',context={"uid":_id,"user":thisUser['username'],"noFollows":True})
+        return render(request,'feed.html',context={"uid":'f',"user":thisUser['username'],"noFollows":False,"following":following})
+
+class UsersView(TemplateView):
+    def get(self,request,_id,*args,**kwargs):
+        return render(request,'users.html',context={})

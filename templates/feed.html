@@ -2,5 +2,5 @@
 
 {% if noFollows %}
     <h2>You are not following anyone</h2>
-    <a href = "#">Add followers</a>
+    <a href = "{% url 'users' uid%}">Add followers</a>
 {% endif %}
