@@ -191,6 +191,22 @@ class DashboardView(TemplateView):
 
         #print(r.content)
         try:
-            return render(request,'dashboard.html',context={"user":thisUser['username'],"playlists":playlists['items'],"devices":devices,"recently_played":recent_tracks})
+            return render(request,'dashboard.html',context={"uid":_id,"user":thisUser['username'],"playlists":playlists['items'],"devices":devices,"recently_played":recent_tracks})
         except:
             return HttpResponse('Something went wrong')
+    
+class FeedView(TemplateView):
+    def get(self,request,_id,*args,**kwargs):
+        spotify_access_endpoint = 'https://spotifysocialnetwork.firebaseio.com/users/'+_id+'.json?access_token='+gcp_access_token
+        r = requests.get(spotify_access_endpoint)
+        noFollows = False
+        if r.status_code == 200:
+            stringified = r.content.decode('utf8').replace("'", '"')
+            thisUser = json.loads(stringified)
+        try:
+            following = thisUser['following']
+        except:
+            following = []
+        if not following:
+            return render(request,'feed.html',context={"user":thisUser['username'],"noFollows":True})
+        return render(request,'feed.html',context={"user":thisUser['username'],"noFollows":False,"following":following})
