@@ -213,4 +213,17 @@ class FeedView(TemplateView):
 
 class UsersView(TemplateView):
     def get(self,request,_id,*args,**kwargs):
-        return render(request,'users.html',context={})
+        spotify_access_endpoint = 'https://spotifysocialnetwork.firebaseio.com/users/.json?access_token='+gcp_access_token
+        r = requests.get(spotify_access_endpoint)
+        if r.status_code == 200:
+            stringified = r.content.decode('utf8').replace("'", '"')
+            allUsers = json.loads(stringified)
+        canFollow = []
+        try:
+            for user in allUsers:
+                if user != _id:
+                    canFollow.append(allUsers[user])
+        except:
+            pass
+        print(canFollow)
+        return render(request,'users.html',context={'id':_id,'canFollow':canFollow,'canFollowLength':len(canFollow)})
