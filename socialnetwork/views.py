@@ -212,6 +212,8 @@ class FeedView(TemplateView):
         return render(request,'feed.html',context={"uid":'f',"user":thisUser['username'],"noFollows":False,"following":following})
 
 class UsersView(TemplateView):
+    def __init__(self):
+        self.user_id = ''
     def get(self,request,_id,*args,**kwargs):
         spotify_access_endpoint = 'https://spotifysocialnetwork.firebaseio.com/users/.json?access_token='+gcp_access_token
         r = requests.get(spotify_access_endpoint)
@@ -219,11 +221,63 @@ class UsersView(TemplateView):
             stringified = r.content.decode('utf8').replace("'", '"')
             allUsers = json.loads(stringified)
         canFollow = []
+        self.user_id += _id
         try:
             for user in allUsers:
                 if user != _id:
                     canFollow.append(allUsers[user])
         except:
             pass
-        print(canFollow)
         return render(request,'users.html',context={'id':_id,'canFollow':canFollow,'canFollowLength':len(canFollow)})
+    def post(self,request,*args,**kwargs):
+        print(request.POST.get('moiz'))
+        print('BREH',self.user_id)
+        return render(request,'users.html',context={})
+
+def usersView(request,_id):
+    #canFollow = []
+    if request.method == 'GET':
+        #_id = request.GET.get()
+        #print('hey')
+        spotify_access_endpoint = 'https://spotifysocialnetwork.firebaseio.com/users/.json?access_token='+gcp_access_token
+        r = requests.get(spotify_access_endpoint)
+        if r.status_code == 200:
+            stringified = r.content.decode('utf8').replace("'", '"')
+            allUsers = json.loads(stringified)
+            print(allUsers)
+        canFollow = {}
+        try:
+            for num,user_id in enumerate(allUsers):
+                if user_id != _id:
+                    canFollow[num] = allUsers[user_id]
+        except:
+            pass
+    if request.method == 'POST':
+        print('YEOOOO')
+        spotify_access_endpoint = 'https://spotifysocialnetwork.firebaseio.com/users/.json?access_token='+gcp_access_token
+        r = requests.get(spotify_access_endpoint)
+        if r.status_code == 200:
+            stringified = r.content.decode('utf8').replace("'", '"')
+            allUsers = json.loads(stringified)
+        canFollow = {}
+        try:
+            for num,user_id in enumerate(allUsers):
+                if user_id != _id:
+                    canFollow[num] = allUsers[user_id]
+        except:
+            pass
+        for i in range(len(canFollow)):
+            getFollow = request.POST.get(str(i))
+            if getFollow:
+                try:
+                    following_body = {
+                        'Following':getFollow
+                    }
+                    addFollowEndpoint = 'https://spotifysocialnetwork.firebaseio.com/users/'+_id+'.json?access_token='+gcp_access_token
+                    addFollowReq = requests.post(addFollowEndpoint,data=json.dumps(following_body))
+                    print(addFollowReq.content)
+                except:
+                    print('Something went wrong')
+
+
+    return render(request,'users.html',context={'id':_id,'canFollow':canFollow,'canFollowLength':len(canFollow)})
