@@ -214,6 +214,8 @@ class FeedView(TemplateView):
 class UsersView(TemplateView):
     def __init__(self):
         self.user_id = ''
+    def getId(Followed):
+        return 'ye'
     def get(self,request,_id,*args,**kwargs):
         spotify_access_endpoint = 'https://spotifysocialnetwork.firebaseio.com/users/.json?access_token='+gcp_access_token
         r = requests.get(spotify_access_endpoint)
@@ -236,6 +238,33 @@ class UsersView(TemplateView):
 
 def usersView(request,_id):
     #canFollow = []
+    def getId(Followed):
+        allUsersEndpoint = 'https://spotifysocialnetwork.firebaseio.com/users/.json?access_token='+gcp_access_token
+        r = requests.get(allUsersEndpoint)
+        stringified = r.content.decode('utf8').replace("'", '"')
+        allUsers = json.loads(stringified)
+        for key in allUsers:
+            userId = allUsers[key]['userId']
+            if userId == Followed:
+                return key
+        #    if allUsers[key][userId] == Followed:
+        #        return key
+        return 'Not found'
+    def addFollower(receiver,sender):
+        this_user_follower_endpoint = 'https://spotifysocialnetwork.firebaseio.com/users/'+receiver+'/Followers.json?access_token='+gcp_access_token
+        get_followers_req = requests.get(this_user_follower_endpoint)
+        stringified = get_followers_req.content.decode('utf8').replace("'",'"')
+        existingFollowers = json.loads(stringified)
+        if isinstance(existingFollowers,list):
+            existingFollowers += [sender]
+        else:
+            existingFollowers = [sender]
+        followers_body = {
+            'Followers':existingFollowers
+        }
+        addFollowerEndpoint = 'https://spotifysocialnetwork.firebaseio.com/users/'+receiver+'.json?access_token='+gcp_access_token
+        addFollowerReq = requests.patch(addFollowerEndpoint,data=json.dumps(followers_body))
+        return addFollowerReq.content
     if request.method == 'GET':
         #_id = request.GET.get()
         #print('hey')
@@ -270,12 +299,28 @@ def usersView(request,_id):
             getFollow = request.POST.get(str(i))
             if getFollow:
                 try:
+                    following_endpoint = 'https://spotifysocialnetwork.firebaseio.com/users/'+_id+'/Following.json?access_token='+gcp_access_token
+                    getFollowingReq = requests.get(following_endpoint)
+                    stringified = getFollowingReq.content.decode('utf8').replace("'",'"')
+                    existingFollowing = json.loads(stringified)
+                    if isinstance(existingFollowing,list):
+                        print('breh1')
+                        existingFollowing += [getFollow]
+                    else:
+                        print('breh')
+                        existingFollowing = [getFollow]
+                    #print(existingFollowing)
+
                     following_body = {
-                        'Following':getFollow
+                        'Following':existingFollowing
                     }
                     addFollowEndpoint = 'https://spotifysocialnetwork.firebaseio.com/users/'+_id+'.json?access_token='+gcp_access_token
-                    addFollowReq = requests.post(addFollowEndpoint,data=json.dumps(following_body))
-                    print(addFollowReq.content)
+                    addFollowReq = requests.patch(addFollowEndpoint,data=json.dumps(following_body))
+                    #getFollowingReq = requests.get(addFollowEndpoint)
+                    idOfUserFollowed = getId(getFollow)
+                    print(addFollower(idOfUserFollowed,_id))
+                    print(idOfUserFollowed)
+                    #print(addFollowReq.content)
                 except:
                     print('Something went wrong')
 
