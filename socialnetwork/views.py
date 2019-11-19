@@ -207,6 +207,7 @@ class FeedView(TemplateView):
             following = thisUser['following']
         except:
             following = []
+        print(thisUser)
         if not following:
             return render(request,'feed.html',context={"uid":_id,"user":thisUser['username'],"noFollows":True})
         return render(request,'feed.html',context={"uid":'f',"user":thisUser['username'],"noFollows":False,"following":following})
@@ -323,6 +324,19 @@ def usersView(request,_id):
                     #print(addFollowReq.content)
                 except:
                     print('Something went wrong')
-
-
     return render(request,'users.html',context={'id':_id,'canFollow':canFollow,'canFollowLength':len(canFollow)})
+
+def ShareView(request,_id):
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        desc = request.POST.get('desc')
+        post_endpoint = 'https://spotifysocialnetwork.firebaseio.com/posts.json?access_token='+gcp_access_token
+        post_body = {
+            "posterId":_id,
+            "title":title,
+            "desc":desc
+        }
+        createPost = requests.post(post_endpoint,data=json.dumps(post_body))
+        print(createPost.content)
+        
+    return render(request,'share.html')
