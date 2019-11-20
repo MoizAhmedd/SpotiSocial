@@ -123,6 +123,7 @@ class DashboardView(TemplateView):
             thisUser = json.loads(stringified)
         if thisUser:
             try:
+                #print('We here')
                 sp = spotipy.Spotify(auth=thisUser['spotify_access'])
                 if sp:
                     playlists = sp.current_user_playlists()
@@ -150,6 +151,7 @@ class DashboardView(TemplateView):
             except:
                 #Access token expired, refresh and get new
                 #print('TESTING 2')
+                print('Now we here boohoo')
                 token_endpoint = 'https://accounts.spotify.com/api/token'
                 token_req_body = {
                     "grant_type": "refresh_token",
@@ -157,6 +159,7 @@ class DashboardView(TemplateView):
                 }
                 #print('MAKING REQUEST\n')
                 token_req = requests.post(token_endpoint,data=token_req_body,headers=headers)
+                
                 #print('RESPONE\n',token_req.content)
                 token_response = json.loads(token_req.content.decode('utf8').replace("'", '"'))
                 new_access_token = token_response["access_token"]
@@ -164,6 +167,7 @@ class DashboardView(TemplateView):
                 sp = spotipy.Spotify(auth=new_access_token)
                 #print('TESTING NEW\n',sp)
                 playlists = sp.current_user_playlists()
+                
                 #print('CALLING METHODS WITH NEW\n',playlists,'\n')
                 devices = sp.devices()
                 recently_played = sp.current_user_recently_played()
@@ -171,7 +175,8 @@ class DashboardView(TemplateView):
                 #print(devices,'\n')
                 #print(recently_played,'\n')
                 recent_tracks = []
-                for track in recently_played:
+                #print(recently_played['items'])
+                for track in recently_played['items']:
                     this_track = track['track']
                     #print('THIS TRACK\n',this_track)
                     name = this_track['name']
@@ -185,8 +190,10 @@ class DashboardView(TemplateView):
                         "image":image
                     }
                     recent_tracks.append(data)
+                print('YO')
                 for playlist in playlists['items']:
                     playlist['images'] = [playlist['images'][0]]
+                #print(playlists)
                 #recent = sp.current_user_recently_played()
 
         #print(r.content)
