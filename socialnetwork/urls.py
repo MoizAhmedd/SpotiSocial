@@ -9,5 +9,6 @@ urlpatterns = [
     path('dashboard/<str:_id>',views.DashboardView.as_view(),name='dashboard'),
     path('feed/<str:_id>',views.FeedView.as_view(),name='feed'),
     path('users/<str:_id>',views.usersView,name='users'),
-    path('share/<str:_id>',views.ShareView,name='share')
+    path('share/<str:_id>',views.ShareView,name='share'),
+    path('create/<str:link>/<str:uid>',views.createPostView,name='create')
 ]
