@@ -1,20 +1,24 @@
 <h2>Choose a song</h2>
-<ul>
-    <li>NMEME</li>
-    <li>YOUOUEOUE</li>
-    <li>MEMEMEMEMEM</li>
-</ul>
+<h2>Recently Played</h2>
+{% for recent in recent_tracks%}
+        {% for key,value in recent.items%}
+            {% if key == 'name' %}
+                Name:{{value}}
+            {% endif %}
+            {% if key == 'artist'%}
+                By:{{value}}
+            {% endif %}
+            {% if key == 'image'%}
+                <img src = "{{value}}">
+            {% endif %}
+            {% if key == 'link' %}
+            <form id = "chooseSong" action="" method="POST">
+            {% csrf_token %}
+            <!-- <input type="text" class="form-control" placeholder="This song was awesome" name="link" value = "{{value}}" required> -->
+            <button name = "link" value = "{{value}}"type="submit">Share</button>
+            </form>
+            {% endif %}
+        <br>
+        {% endfor %}
+{% endfor %}
 
-<form id="shareForm" action="" method="POST">
-    {% csrf_token %}
-    <div class="form-group">
-        <label for="title"><b>Title</b></label>
-        <input type="text" class="form-control" placeholder="This song was awesome" name="title" required>
-      </div>
-      <div class="form-group">
-        <label for="description"><b>Description</b></label>
-        <textarea class="form-control" rows="10" name="desc">This song is the best</textarea>
-      </div>
-    
-      <button type="submit" class="btn btn-primary btn-lg signup" >Share</button>
-    </form>
