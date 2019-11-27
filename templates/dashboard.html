@@ -2,6 +2,13 @@
 
 <a href = "{% url 'feed' uid%}">View your feed</a>
 
+{% if followers %}
+<h3>Your Followers</h3>
+{% for key,value in followers.items%}
+<a href = "{% url 'dashboard' key%}"><h2>Username:{{value}}</h2></a>
+{% endfor %}
+{% endif %}
+
 <h4>Your Devices</h4>
 <h5>{{devices}}</h5>
 
@@ -49,7 +56,4 @@
         <br>
         {% endfor %}
 {% endfor %}
-<h2>Followers:</h2>
-    <h3>You have no followers</h3>
-<h2>Following</h2>
-    <h3>You are following 0 people, click to follow users</h3>
+
