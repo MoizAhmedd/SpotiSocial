@@ -123,6 +123,18 @@ class DashboardView(TemplateView):
             thisUser = json.loads(stringified)
         if thisUser:
             try:
+                followers = {}
+                for follower in thisUser['Followers']:
+                    #Get user name, and id
+                    followerInfoEndpoint = 'https://spotifysocialnetwork.firebaseio.com/users/'+follower+'.json?access_token='+gcp_access_token
+                    r = requests.get(followerInfoEndpoint)
+                    stringified = r.content.decode('utf8').replace("'", '"')
+                    thisFollower = json.loads(stringified)
+                    followers[follower] = thisFollower['username']
+                
+            except:
+                followers = {}
+            try:
                 #print('We here')
                 sp = spotipy.Spotify(auth=thisUser['spotify_access'])
                 if sp:
@@ -198,10 +210,42 @@ class DashboardView(TemplateView):
 
         #print(r.content)
         try:
-            return render(request,'dashboard.html',context={"uid":_id,"user":thisUser['username'],"playlists":playlists['items'],"devices":devices,"recently_played":recent_tracks})
-        except:
+            return render(request,'dashboard.html',context={"uid":_id,"user":thisUser['username'],"playlists":playlists['items'],"devices":devices,"recently_played":recent_tracks,"followers":followers})
+        except Exception as e:
+            print(e)
             return HttpResponse('Something went wrong')
-    
+
+def getUser(followee):
+    print('hey')
+    get_users_endpoint = 'https://spotifysocialnetwork.firebaseio.com/users.json?access_token='+gcp_access_token
+    r = requests.get(get_users_endpoint)
+    stringified = r.content.decode('utf8').replace("'", '"')
+    users = json.loads(stringified)
+    for user in users:
+        spotify_access_endpoint = 'https://spotifysocialnetwork.firebaseio.com/users/'+user+'.json?access_token='+gcp_access_token
+        r = requests.get(spotify_access_endpoint)
+        stringified = r.content.decode('utf8').replace("'", '"')
+        thisUser = json.loads(stringified)
+        if thisUser['userId'] == followee:
+            return user
+def getPosts(followee):
+    result = []
+    user = getUser(followee)
+    get_posts_endpoint = 'https://spotifysocialnetwork.firebaseio.com/posts.json?access_token='+gcp_access_token
+    r = requests.get(get_posts_endpoint)
+    stringified = r.content.decode('utf8').replace("'", '"')
+    posts = json.loads(stringified)
+    for post in posts:
+        post_detail_endpoint = 'https://spotifysocialnetwork.firebaseio.com/posts/'+post+'.json?access_token='+gcp_access_token
+        r = requests.get(post_detail_endpoint)
+        stringified = r.content.decode('utf8').replace("'", '"')
+        thisPost = json.loads(stringified)
+        if 'posterId' in thisPost:
+            #print(thisPost['posterId'],user)
+            if thisPost['posterId'] == user:
+                #print('BEEEE')
+                result.append(thisPost)
+    return result
 class FeedView(TemplateView):
     def get(self,request,_id,*args,**kwargs):
         spotify_access_endpoint = 'https://spotifysocialnetwork.firebaseio.com/users/'+_id+'.json?access_token='+gcp_access_token
@@ -211,13 +255,23 @@ class FeedView(TemplateView):
             stringified = r.content.decode('utf8').replace("'", '"')
             thisUser = json.loads(stringified)
         try:
-            following = thisUser['following']
-        except:
+            posts = []
+            following = thisUser['Following']
+            for followee in following:
+                posts.extend(getPosts(followee))
+            print(posts)
+
+            #get user ids of all users that this user is following(profile ids)
+            #get posts created by the users in this users following field
+            #pass posts to context, determine how many, and sorting
+        except Exception as e:
+            print(e)
             following = []
-        print(thisUser)
+        #print(thisUser)
         if not following:
             return render(request,'feed.html',context={"uid":_id,"user":thisUser['username'],"noFollows":True})
-        return render(request,'feed.html',context={"uid":'f',"user":thisUser['username'],"noFollows":False,"following":following})
+
+        return render(request,'feed.html',context={"uid":'f',"user":thisUser['username'],"noFollows":False,"following":following,'posts':posts})
 
 class UsersView(TemplateView):
     def __init__(self):
@@ -334,16 +388,73 @@ def usersView(request,_id):
     return render(request,'users.html',context={'id':_id,'canFollow':canFollow,'canFollowLength':len(canFollow)})
 
 def ShareView(request,_id):
+    if request.method == 'GET':
+        print(request.GET.get('link'))
+        spotify_access_endpoint = 'https://spotifysocialnetwork.firebaseio.com/users/'+_id+'.json?access_token='+gcp_access_token
+        r = requests.get(spotify_access_endpoint)
+        recently_tracks = []
+        if r.status_code == 200:
+            stringified = r.content.decode('utf8').replace("'", '"')
+            thisUser = json.loads(stringified)
+        if thisUser:
+            try:
+                sp = spotipy.Spotify(auth=thisUser['spotify_access'])
+                print(sp.current_user())
+            except:
+                token_endpoint = 'https://accounts.spotify.com/api/token'
+                token_req_body = {
+                    "grant_type": "refresh_token",
+                    "refresh_token":thisUser['spotify_refresh']
+                }
+                token_req = requests.post(token_endpoint,data=token_req_body,headers=headers)
+                token_response = json.loads(token_req.content.decode('utf8').replace("'", '"'))
+                new_access_token = token_response["access_token"]
+                sp = spotipy.Spotify(auth=new_access_token)
+        if sp:
+            recent_tracks = []
+            recently_played = sp.current_user_recently_played()
+            for track in recently_played['items']:
+                this_track = track['track']
+                #print('THIS TRACK\n',this_track)
+                name = this_track['name']
+                artist = this_track['artists'][0]['name']
+                link = this_track['external_urls']['spotify']
+                image = this_track['album']['images'][0]['url']
+                data = {
+                    "name":name,
+                    "artist":artist,
+                    "image":image,
+                    "link":link
+                }
+                recent_tracks.append(data)
+            #print(recent_tracks)
+    if request.method == 'POST':
+        song_id = request.POST.get('link').split('/')[-1]
+        return redirect('create',link=song_id,uid=_id)
+        # title = request.POST.get('title')
+        # desc = request.POST.get('desc')
+        # post_endpoint = 'https://spotifysocialnetwork.firebaseio.com/posts.json?access_token='+gcp_access_token
+        # post_body = {
+        #     "posterId":_id,
+        #     "title":title,
+        #     "desc":desc
+        # }
+        # createPost = requests.post(post_endpoint,data=json.dumps(post_body))
+        #print(createPost.content)
+        
+    return render(request,'share.html',context={'recent_tracks':recent_tracks})
+
+def createPostView(request,link,uid):
     if request.method == 'POST':
         title = request.POST.get('title')
         desc = request.POST.get('desc')
         post_endpoint = 'https://spotifysocialnetwork.firebaseio.com/posts.json?access_token='+gcp_access_token
         post_body = {
-            "posterId":_id,
+            "posterId":uid,
             "title":title,
-            "desc":desc
+            "desc":desc,
+            "trackId":link
         }
         createPost = requests.post(post_endpoint,data=json.dumps(post_body))
-        print(createPost.content)
-        
-    return render(request,'share.html')
+        return HttpResponse('Created Post:{} with song id {}'.format(title,link))
+    return render(request,'createpost.html',context={})
