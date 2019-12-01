@@ -244,7 +244,11 @@ def getPosts(followee):
             #print(thisPost['posterId'],user)
             if thisPost['posterId'] == user:
                 #print('BEEEE')
+<<<<<<< HEAD
                 result.append([thisPost,post])
+=======
+                result.append(thisPost)
+>>>>>>> c4196e13f1d893d283027bda758e3f9e0f60fc76
     return result
 class FeedView(TemplateView):
     def get(self,request,_id,*args,**kwargs):
@@ -256,10 +260,15 @@ class FeedView(TemplateView):
             thisUser = json.loads(stringified)
         try:
             posts = []
+<<<<<<< HEAD
             ids = []
             following = thisUser['Following']
             for followee in following:
                 #print(getPosts(followee)[0][1])
+=======
+            following = thisUser['Following']
+            for followee in following:
+>>>>>>> c4196e13f1d893d283027bda758e3f9e0f60fc76
                 posts.extend(getPosts(followee))
             print(posts)
 
@@ -273,7 +282,11 @@ class FeedView(TemplateView):
         if not following:
             return render(request,'feed.html',context={"uid":_id,"user":thisUser['username'],"noFollows":True})
 
+<<<<<<< HEAD
         return render(request,'feed.html',context={"uid":_id,"user":thisUser['username'],"noFollows":False,"following":following,'posts':posts})
+=======
+        return render(request,'feed.html',context={"uid":'f',"user":thisUser['username'],"noFollows":False,"following":following,'posts':posts})
+>>>>>>> c4196e13f1d893d283027bda758e3f9e0f60fc76
 
 class UsersView(TemplateView):
     def __init__(self):
