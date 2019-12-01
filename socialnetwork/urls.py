@@ -8,5 +8,8 @@ urlpatterns = [
     path('signin',views.SignInFireBaseView.as_view(),name='signin'),
     path('dashboard/<str:_id>',views.DashboardView.as_view(),name='dashboard'),
     path('feed/<str:_id>',views.FeedView.as_view(),name='feed'),
-    path('users/<str:_id>',views.UsersView.as_view(),name='users')
+    path('users/<str:_id>',views.usersView,name='users'),
+    path('share/<str:_id>',views.ShareView,name='share'),
+    path('create/<str:link>/<str:uid>',views.createPostView,name='create'),
+    path('detail/<str:postId>/<str:uid>',views.postDetailView,name='postdetail')
 ]
