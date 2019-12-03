@@ -3,5 +3,14 @@
 
 <form action = "" method = "POST">
     {% csrf_token %}
-    <button type = "submit" class="btn btn-primary btn-lg signup" >Like</button>
+    <button name="like-btn" id = "like-btn" type = "submit" class="btn btn-primary btn-lg signup" >Like</button>
+</form>
+
+<form action = "" method = "POST">
+    {% csrf_token %}
+    <div class="form-group">
+        <label for="comment"><b>Comment</b></label>
+        <textarea class="form-control" rows="10" name="comment">How do you feel about this post</textarea>
+        <button type="submit" class="btn btn-primary btn-lg signup" >Post Comment</button>
+    </div>
 </form>
