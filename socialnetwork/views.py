@@ -216,7 +216,6 @@ class DashboardView(TemplateView):
             return HttpResponse('Something went wrong')
 
 def getUser(followee):
-    print('hey')
     get_users_endpoint = 'https://spotifysocialnetwork.firebaseio.com/users.json?access_token='+gcp_access_token
     r = requests.get(get_users_endpoint)
     stringified = r.content.decode('utf8').replace("'", '"')
@@ -233,8 +232,11 @@ def getPosts(followee):
     user = getUser(followee)
     get_posts_endpoint = 'https://spotifysocialnetwork.firebaseio.com/posts.json?access_token='+gcp_access_token
     r = requests.get(get_posts_endpoint)
+    print('R.content',r.content)
     stringified = r.content.decode('utf8').replace("'", '"')
+    print('stringified',stringified)
     posts = json.loads(stringified)
+    print('posts',posts)
     for post in posts:
         post_detail_endpoint = 'https://spotifysocialnetwork.firebaseio.com/posts/'+post+'.json?access_token='+gcp_access_token
         r = requests.get(post_detail_endpoint)
@@ -244,11 +246,7 @@ def getPosts(followee):
             #print(thisPost['posterId'],user)
             if thisPost['posterId'] == user:
                 #print('BEEEE')
-<<<<<<< HEAD
                 result.append([thisPost,post])
-=======
-                result.append(thisPost)
->>>>>>> c4196e13f1d893d283027bda758e3f9e0f60fc76
     return result
 class FeedView(TemplateView):
     def get(self,request,_id,*args,**kwargs):
@@ -260,15 +258,10 @@ class FeedView(TemplateView):
             thisUser = json.loads(stringified)
         try:
             posts = []
-<<<<<<< HEAD
             ids = []
             following = thisUser['Following']
             for followee in following:
                 #print(getPosts(followee)[0][1])
-=======
-            following = thisUser['Following']
-            for followee in following:
->>>>>>> c4196e13f1d893d283027bda758e3f9e0f60fc76
                 posts.extend(getPosts(followee))
             print(posts)
 
@@ -276,17 +269,13 @@ class FeedView(TemplateView):
             #get posts created by the users in this users following field
             #pass posts to context, determine how many, and sorting
         except Exception as e:
-            print(e)
+            print('hehe',e)
             following = []
         #print(thisUser)
         if not following:
             return render(request,'feed.html',context={"uid":_id,"user":thisUser['username'],"noFollows":True})
 
-<<<<<<< HEAD
         return render(request,'feed.html',context={"uid":_id,"user":thisUser['username'],"noFollows":False,"following":following,'posts':posts})
-=======
-        return render(request,'feed.html',context={"uid":'f',"user":thisUser['username'],"noFollows":False,"following":following,'posts':posts})
->>>>>>> c4196e13f1d893d283027bda758e3f9e0f60fc76
 
 class UsersView(TemplateView):
     def __init__(self):
@@ -490,22 +479,43 @@ def postDetailView(request,postId,uid):
         postTitle = thisPost['title']
         desc = thisPost['desc']
         poster = getPosterFromId(thisPost['posterId'])
+        if request.GET.get('like-btn'):
+            return HttpResponse('Liked')
+
     if request.method == 'POST':
-        post_likes_endpoint = 'https://spotifysocialnetwork.firebaseio.com/posts/'+postId+'/likes.json?access_token='+gcp_access_token
-        post_likes_req = requests.get(post_likes_endpoint)
-        stringified = post_likes_req.content.decode('utf8').replace("'",'"')
-        post_likes = json.loads(stringified)
-        if isinstance(post_likes,list):
-            post_likes += [getPosterFromId(uid)]
+        if 'like-btn' in request.POST:
+            post_likes_endpoint = 'https://spotifysocialnetwork.firebaseio.com/posts/'+postId+'/likes.json?access_token='+gcp_access_token
+            post_likes_req = requests.get(post_likes_endpoint)
+            stringified = post_likes_req.content.decode('utf8').replace("'",'"')
+            post_likes = json.loads(stringified)
+            if isinstance(post_likes,list):
+                post_likes += [getPosterFromId(uid)]
+            else:
+                post_likes = [getPosterFromId(uid)]
+            likes_body = {
+                'likes':post_likes
+            }
+            print(likes_body)
+            addLikeEndpoint = 'https://spotifysocialnetwork.firebaseio.com/posts/'+postId+'.json?access_token='+gcp_access_token
+            addLikeReq = requests.patch(addLikeEndpoint,data=json.dumps(likes_body))
+            print(addLikeReq.content)
+            return HttpResponse('liked')
         else:
-            post_likes = [getPosterFromId(uid)]
-        likes_body = {
-            'likes':post_likes
-        }
-        print(likes_body)
-        addLikeEndpoint = 'https://spotifysocialnetwork.firebaseio.com/posts/'+postId+'.json?access_token='+gcp_access_token
-        addLikeReq = requests.patch(addLikeEndpoint,data=json.dumps(likes_body))
-        print(addLikeReq.content)
-        return HttpResponse('liked')
+            comment = request.POST.get('comment')
+            post_comments_endpoint = 'https://spotifysocialnetwork.firebaseio.com/posts/'+postId+'/comments.json?access_token='+gcp_access_token
+            post_comments_req = requests.get(post_comments_endpoint)
+            stringified = post_comments_req.content.decode('utf8').replace("'",'"')
+            post_comments = json.loads(stringified)
+            if isinstance(post_comments,list):
+                post_comments += [{getPosterFromId(uid):comment}]
+            else:
+                post_comments = {getPosterFromId(uid):comment}
+            comments_body = {
+                'comments':post_comments
+            }
+            addCommentEndpoint = 'https://spotifysocialnetwork.firebaseio.com/posts/'+postId+'.json?access_token='+gcp_access_token
+            addCommentReq = requests.patch(addCommentEndpoint,data=json.dumps(comments_body))
+            print(addCommentReq.content)
+            return HttpResponse('commented')
 
     return render(request,'postdetail.html',context={'title':postTitle,'desc':desc,'poster':poster})
